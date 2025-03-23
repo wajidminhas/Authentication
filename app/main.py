@@ -4,8 +4,10 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException
 from contextlib import asynccontextmanager
 
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 
+from app.auth import authenticate_user
 from app.router.user import user_router
 from app.db import create_db_and_tables, get_session
 from app.model import Todo
@@ -49,3 +51,12 @@ async def get_todo(todo_id: int, session: Annotated[Session, Depends(get_session
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
     return todo
+
+
+#    ************     ***********     login user      ***********     ***********     **********
+
+@app.post("/token")
+async def login(form_data: Annotated[OAuth2PasswordRequestForm ,Depends()],
+                session: Annotated[Session, Depends(get_session)]):
+    user = authenticate_user(session, form_data.username, form_data.password)
+    return user

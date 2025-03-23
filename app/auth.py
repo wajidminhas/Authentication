@@ -16,6 +16,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 def hash_password(password):
     return pwd_context.hash(password)
 
+# ***********         ********** VERIFY PASSWORD ************          ******************
+
+def verify_password(password, hashed_password):
+    return pwd_context.verify(password, hashed_password)
+
 # ***********         ********** REGISTER USER ************          ******************
 
 def get_user_from_db(session : Annotated[Session, Depends(get_session)],
@@ -31,4 +36,15 @@ def get_user_from_db(session : Annotated[Session, Depends(get_session)],
     return user
     
     
+# ***********         ********** Authenticate User ************          ******************
 
+def authenticate_user(session : Annotated[Session, Depends(get_session)],
+                      username,
+                      password,
+                      ):
+       db_user = get_user_from_db(username=username, session=session, email=username)
+       if not db_user:
+           return False
+       if not verify_password(password=password, hashed_password=db_user.password):
+           return False
+       return db_user
