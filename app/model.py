@@ -26,7 +26,7 @@ class Todo(SQLModel, table=True):
  # ***********     ***********     ***********     ***********     ***********     ********** 
 
     
-class Register_User(OAuth2PasswordRequestForm):
+class Register_User(BaseModel):
     email: Annotated[
         str,
         Field(

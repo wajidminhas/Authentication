@@ -1,10 +1,10 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
-
+from app.auth import oauth2_scheme
 from app.auth import get_user_from_db, hash_password
 from app.db import get_session
-from app.model import Register_User
+from app.model import Register_User, User
 
 
 user_router = APIRouter(
@@ -18,16 +18,21 @@ async def read_user():
     return {"message": "Welcome to Nawfa Mart"}
 
 @user_router.post("/register")
-async def register_user(form_data : Annotated[Register_User, Depends()], 
-                        session : Annotated[Session, Depends(get_session)], username, email, password):
-    db_user = get_user_from_db(session, form_data.username == username,
-                                form_data.email == email)
+async def register_user(new_data : Annotated[Register_User, Depends()], 
+                        session : Annotated[Session, Depends(get_session)],
+                        ):
+    db_user = get_user_from_db(session, new_data.username,
+                                new_data.email 
+                                )
     if db_user:
         return HTTPException(status_code=400, detail="User already exists")
-    user = Register_User(username=form_data.username,
-                          email=form_data.email,
-                         password=hash_password(form_data.password))
+    user = User(username=new_data.username, email=new_data.email, password=hash_password(new_data.password))
     session.add(user)
     session.commit()
     session.refresh(user)
-    return user
+    return {"message": f""" User {user.username} has been registered"""}
+
+@user_router.get("/login")
+async def user_profile(current_user : Annotated[User, Depends(oauth2_scheme)]):
+    return ("hello world")
+    
