@@ -10,5 +10,5 @@ try:
 except FileNotFoundError:
     config = Config()
 
-DATABASE_TODO_NEW = config("DATABASE_TODO_NEW", cast=Secret)
+DATABASE_URL = config("DATABASE_URL", cast=Secret)
 

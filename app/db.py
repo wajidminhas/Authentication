@@ -5,7 +5,7 @@ from sqlmodel import SQLModel, Session, create_engine
 from app import setting
 
 
-connection_string  = str (setting.DATABASE_TODO_NEW).replace(
+connection_string  = str (setting.DATABASE_URL).replace(
     "postgresql", "postgresql+psycopg"
 )
 

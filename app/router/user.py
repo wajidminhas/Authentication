@@ -1,7 +1,8 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
-from app.auth import oauth2_scheme
+from app.auth import authenticate_user, oauth2_scheme
 from app.auth import get_user_from_db, hash_password
 from app.db import get_session
 from app.model import Register_User, User
@@ -32,7 +33,11 @@ async def register_user(new_data : Annotated[Register_User, Depends()],
     session.refresh(user)
     return {"message": f""" User {user.username} has been registered"""}
 
-@user_router.get("/login")
-async def user_profile(current_user : Annotated[User, Depends(oauth2_scheme)]):
-    return ("hello world")
+@user_router.get("/token")
+async def user_profile(form_data : Annotated[OAuth2PasswordRequestForm, Depends()], session : Annotated[Session, Depends(get_session)]):
+    user = authenticate_user(form_data.username, form_data.password, session)
+    if not user:
+        return HTTPException(status_code=400, detail="Invalid Credentials")
+    return user
     
+
