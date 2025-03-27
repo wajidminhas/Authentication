@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
-from app.auth import authenticate_user, oauth2_scheme
+from app.auth import authenticate_user, current_user, oauth2_scheme
 from app.auth import get_user_from_db, hash_password
 from app.db import get_session
 from app.model import Register_User, User
@@ -14,9 +14,11 @@ user_router = APIRouter(
     responses= {404: {"description": "User Not found"}},
 )
 
-@user_router.get("/")
-async def read_user():
-    return {"message": "Welcome to Nawfa Mart"}
+
+
+@user_router.get("/profile/")
+async def read_user_profile(current_user: Annotated[User, Depends(current_user)]):
+    return current_user
 
 @user_router.post("/register")
 async def register_user(new_data : Annotated[Register_User, Depends()], 

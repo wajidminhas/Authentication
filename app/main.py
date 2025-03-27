@@ -6,12 +6,12 @@ from fastapi import Depends, FastAPI, HTTPException
 from contextlib import asynccontextmanager
 
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.auth import EXPIRY_MINUTES, authenticate_user, create_access_token, current_user
 from app.router.user import user_router
 from app.db import create_db_and_tables, get_session
-from app.model import Todo, Token, User
+from app.model import Todo, TodoCreate, Token, User
 
 
 @asynccontextmanager
@@ -39,12 +39,13 @@ async def root():
 
 @app.post("/todo/", response_model=Todo)
 async def create_todo(current_user :Annotated[User, Depends(current_user)],
-                      todo: Todo,
+                      todo: TodoCreate,
                      session: Annotated[Session, Depends(get_session)]):
-    session.add(todo)
+    new_todo = Todo(title=todo.title, user_id=current_user.id)
+    session.add(new_todo)
     session.commit()
-    session.refresh(todo)
-    return todo
+    session.refresh(new_todo)
+    return new_todo
 
 #    ************     ***********     TODO  GET SINGLE API      ***********     ***********     **********
 
@@ -55,6 +56,16 @@ async def get_todo(todo_id: int, session: Annotated[Session, Depends(get_session
         raise HTTPException(status_code=404, detail="Todo not found")
     return todo
 
+#    ************     ***********     TODO  GET ALL API      ***********     ***********     **********
+
+@app.get("/todo", response_model=list[Todo])
+async def get_todos(session: Annotated[Session, Depends(get_session)],
+                    current_user: Annotated[User, Depends(current_user)]):
+    
+    todos = session.exec(select(Todo).where(Todo.user_id == current_user.id)).all()
+    if todos is None:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    return todos
 
 #    ************     ***********     login user      ***********     ***********     **********
 

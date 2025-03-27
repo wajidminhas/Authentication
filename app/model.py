@@ -69,3 +69,6 @@ class TokenData(BaseModel):
 
 # class UserInDB(User):
 #     hashed_password: str
+
+class TodoCreate(BaseModel):
+    title : str
