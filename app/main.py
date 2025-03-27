@@ -8,10 +8,10 @@ from contextlib import asynccontextmanager
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 
-from app.auth import EXPIRY_MINUTES, authenticate_user, create_access_token
+from app.auth import EXPIRY_MINUTES, authenticate_user, create_access_token, current_user
 from app.router.user import user_router
 from app.db import create_db_and_tables, get_session
-from app.model import Todo, Token
+from app.model import Todo, Token, User
 
 
 @asynccontextmanager
@@ -38,7 +38,9 @@ async def root():
 #    ************     ***********     TODO POST API      ***********     ***********     **********
 
 @app.post("/todo/", response_model=Todo)
-async def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):
+async def create_todo(current_user :Annotated[User, Depends(current_user)],
+                      todo: Todo,
+                     session: Annotated[Session, Depends(get_session)]):
     session.add(todo)
     session.commit()
     session.refresh(todo)
